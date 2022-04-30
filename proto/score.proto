@@ -1,5 +1,8 @@
 syntax = "proto3";
-option go_package = ".";
+
+package simple_grpc_mongo;
+
+option go_package = "pb;gen";
 
 service ScoreService {
   rpc ListMatches(ListMatchesRequest) returns (ListMatchesResponse);
