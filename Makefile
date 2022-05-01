@@ -1,5 +1,5 @@
 hello:
 	echo "Hello World"
 
-build-grpc:
-	protoc --proto_path=proto --go_out=plugins=grpc:pb service.proto
+proto-generate:
+	protoc ./proto/*.proto --proto_path=proto --go_out=plugins=grpc:. --go-grpc_out=.
