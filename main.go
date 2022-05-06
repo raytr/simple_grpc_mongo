@@ -2,41 +2,38 @@ package main
 
 import (
 	"context"
-	"net/http"
+	"log"
+	"net"
 
-	pb "github.com/grpc-ecosystem/grpc-gateway/v2/examples/internal/helloworld"
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"google.golang.org/grpc"
+
+	helloworldpb "github.com/myuser/myrepo/proto/helloworld"
 )
 
+type server struct {
+	helloworldpb.UnimplementedGreeterServer
+}
+
+func NewServer() *server {
+	return &server{}
+}
+
+func (s *server) SayHello(ctx context.Context, in *helloworldpb.HelloRequest) (*helloworldpb.HelloReply, error) {
+	return &helloworldpb.HelloReply{Message: in.Name + " world"}, nil
+}
+
 func main() {
-	ctx := context.TODO()
-	mux := runtime.NewServeMux()
-	// Register generated routes to mux
-	err := pb.RegisterGreeterHandlerServer(ctx, mux, &GreeterServer{})
+	// Create a listener on TCP port
+	lis, err := net.Listen("tcp", ":8080")
 	if err != nil {
-		panic(err)
+		log.Fatalln("Failed to listen:", err)
 	}
-	// Register custom route for  GET /hello/{name}
-	err = mux.HandlePath("GET", "/hello/{name}", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
-		w.Write([]byte("hello " + pathParams["name"]))
-	})
-	if err != nil {
-		panic(err)
-	}
-	http.ListenAndServe(":8080", mux)
-}
 
-// GreeterServer is the server API for Greeter service.
-type GreeterServer struct {
-}
-
-// SayHello implement to say hello
-func (h *GreeterServer) SayHello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloReply, error) {
-	return &pb.HelloReply{
-		Message: "hello " + req.Name,
-	}, nil
-}
-
-func (s *serviceServer) Check(ctx context.Context, in *health.HealthCheckRequest) (*health.HealthCheckResponse, error) {
-	return &health.HealthCheckResponse{Status: health.HealthCheckResponse_SERVING}, nil
+	// Create a gRPC server object
+	s := grpc.NewServer()
+	// Attach the Greeter service to the server
+	helloworldpb.RegisterGreeterServer(s, &server{})
+	// Serve gRPC Server
+	log.Println("Serving gRPC on 0.0.0.0:8080")
+	log.Fatal(s.Serve(lis))
 }

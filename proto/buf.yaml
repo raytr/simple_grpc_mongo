@@ -1,0 +1,4 @@
+version: v1
+name: buf.build/raytr/simple-grpc-mongo
+deps:
+  - buf.build/googleapis/googleapis
